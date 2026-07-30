@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>domo IA × Pocuro — Agentes que se miden, se corrigen y dejan registro</title>
+<style>
+:root{
+  --bg:#F6F3EC; --surface:#FFFFFF; --surface2:#F0EBE0; --text:#1C2340; --muted:#5D6478;
+  --border:#E2DCCC; --brand:#33508F; --brand2:#D98E3A; --accent:#0E9F6E; --warn:#D97706;
+  --crit:#B3453A; --chip:#F3E8D2; --chipText:#A06A1F; --deep:#1F2C52; --brandMid:#5D7FC9;
+  --shadow:0 2px 10px rgba(40,40,80,.08);
+  --serie-1:#33508F; --serie-2:#D98E3A; --serie-3:#0E9F6E; --serie-4:#5D7FC9;
+  --font-display:'Archivo',system-ui,sans-serif;
+  --font-text:'IBM Plex Sans',system-ui,sans-serif;
+  --font-data:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font-text);line-height:1.6;font-size:16px}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px}
+section{padding:36px 0}
+.eyebrow{font-family:var(--font-data);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--brand2);margin-bottom:10px}
+h1{font-family:var(--font-display);font-size:clamp(30px,5vw,44px);line-height:1.15;letter-spacing:-.01em;margin-bottom:16px}
+h2{font-family:var(--font-display);font-size:26px;line-height:1.2;margin-bottom:8px}
+h3{font-family:var(--font-display);font-size:18px;margin-bottom:6px}
+p{margin-bottom:12px}
+.lead{font-size:18px;color:var(--muted);max-width:640px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.chip{background:var(--chip);color:var(--chipText);font-family:var(--font-data);font-size:12px;padding:5px 14px;border-radius:99px;white-space:nowrap}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;box-shadow:var(--shadow)}
+.muted{color:var(--muted)}
+.small{font-size:13.5px}
+.mono{font-family:var(--font-data)}
+.hero{padding:56px 0 20px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:28px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+.tile .num{font-family:var(--font-display);font-size:30px;font-weight:700;line-height:1.1}
+.tile .num small{font-size:16px;font-weight:600;color:var(--muted)}
+.tile .lbl{font-size:13px;color:var(--muted);margin-top:4px}
+.tile.good .num{color:var(--accent)}
+.howto{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-top:24px}
+.howto strong{font-family:var(--font-data);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand)}
+.agent{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border)}
+.agent .name{font-family:var(--font-display);font-weight:700;font-size:17px}
+.agent .role{font-size:13px;color:var(--muted)}
+/* funnel bars */
+.funnel{margin:18px 0}
+.frow{display:grid;grid-template-columns:170px 1fr 118px;gap:10px;align-items:center;margin-bottom:8px}
+.frow .flabel{font-size:13.5px;text-align:right;color:var(--muted)}
+.ftrack{background:var(--surface2);border-radius:4px;height:26px;position:relative}
+.fbar{background:var(--serie-1);height:26px;border-radius:0 4px 4px 0;min-width:3px}
+.frow .fval{font-family:var(--font-data);font-size:13px}
+.fnote{font-size:12.5px;color:var(--crit);font-family:var(--font-data)}
+.leak{display:flex;gap:10px;align-items:baseline;margin:4px 0 12px 180px}
+.leak .arrow{color:var(--crit);font-family:var(--font-data);font-size:12px}
+/* before/after bars */
+.ba{margin:16px 0}
+.barow{display:grid;grid-template-columns:150px 1fr 74px;gap:10px;align-items:center;margin-bottom:10px}
+.barow .l{font-size:13.5px;text-align:right;color:var(--muted)}
+.batrack{background:var(--surface2);border-radius:4px;height:26px}
+.babar{height:26px;border-radius:0 4px 4px 0;background:var(--serie-1)}
+.barow .v{font-family:var(--font-data);font-size:14px;font-weight:600}
+/* chat */
+.chats{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+@media(max-width:720px){.chats{grid-template-columns:1fr}}
+.chat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative}
+.chat h4{font-family:var(--font-display);font-size:14px;margin-bottom:4px}
+.chat .tag{display:inline-block;font-family:var(--font-data);font-size:10.5px;background:var(--chip);color:var(--chipText);padding:3px 10px;border-radius:99px;margin-bottom:8px}
+.recreado{display:inline-block;font-family:var(--font-data);font-size:11px;color:var(--muted);border:1px dashed var(--border);border-radius:99px;padding:2px 10px;margin-bottom:10px}
+.bub{max-width:88%;padding:9px 13px;border-radius:12px;margin-bottom:7px;font-size:14px;line-height:1.45}
+.bub.bot{background:var(--surface2);border-bottom-left-radius:4px}
+.bub.lead{background:#DCEBDF;margin-left:auto;border-bottom-right-radius:4px}
+.bub .btns{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.bub .btn{font-size:12.5px;border:1px solid var(--brand);color:var(--brand);border-radius:99px;padding:2px 11px;background:var(--surface)}
+.sys{font-size:12px;color:var(--muted);text-align:center;margin:8px 0;font-family:var(--font-data)}
+.chat.bad{border-color:#E5C7C2}
+.chat.bad .tag{background:#F5E0DC;color:var(--crit)}
+.chat.good .tag{background:#DCEBDF;color:var(--accent)}
+/* tables */
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+th{font-family:var(--font-data);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.num,th.num{font-family:var(--font-data);text-align:right;white-space:nowrap}
+.ok{color:var(--accent);font-weight:600}
+.flat{color:var(--muted);font-weight:600}
+.tablewrap{overflow-x:auto}
+/* callout */
+.callout{border-left:3px solid var(--brand2);background:var(--surface);border-radius:0 12px 12px 0;padding:14px 18px;margin:18px 0;font-size:15px}
+.callout.green{border-left-color:var(--accent)}
+.callout.red{border-left-color:var(--crit)}
+/* cycle */
+.cycle{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:20px}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center}
+.step .n{font-family:var(--font-data);font-size:11px;color:var(--brand2);letter-spacing:.1em}
+.step h4{font-family:var(--font-display);font-size:15px;margin:6px 0 4px}
+.step p{font-size:13px;color:var(--muted);margin:0}
+/* ads compare */
+.adcmp{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0}
+@media(max-width:720px){.adcmp{grid-template-columns:1fr}}
+.adcard{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px}
+.adcard.win{border-color:var(--accent)}
+.adcard .adtag{font-family:var(--font-data);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.adcard.win .adtag{color:var(--accent)}
+.adcard h4{font-family:var(--font-display);font-size:16px;margin-bottom:12px}
+.adcard dl{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:14px}
+.adcard dt{color:var(--muted)}
+.adcard dd{font-family:var(--font-data);text-align:right;font-weight:600}
+.adcard .big{font-family:var(--font-display);font-size:26px;font-weight:700;margin-top:12px}
+.adcard.win .big{color:var(--accent)}
+hr.sep{border:none;border-top:1px solid var(--border);margin:0}
+.foot{padding:32px 0 56px;font-size:13px;color:var(--muted)}
+.foot .card{padding:18px 22px}
+.cta{background:var(--deep);color:#F2EDE4;border-radius:14px;padding:28px;margin-top:8px}
+.cta h2{color:#fff}
+.cta p{color:#C9CFE2}
+.cta ol{margin:12px 0 16px 20px;color:#E4E8F4}
+.cta ol li{margin-bottom:6px}
+.cta .mail{display:inline-block;background:var(--brand2);color:#1C2340;font-weight:700;border-radius:99px;padding:10px 22px;text-decoration:none;font-family:var(--font-display)}
+@media print{
+  body{background:#fff}
+  .card,.tile,.chat,.adcard,.step{box-shadow:none}
+  section{padding:22px 0}
+  .hero{padding:28px 0 10px}
+  video{display:none}
+  .card,.chat,.adcard,.callout,.cta,.tile{break-inside:avoid}
+  h2,h3{break-after:avoid}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">domo IA · preparado para Inmobiliaria Pocuro · julio 2026</div>
+    <h1>Nuestros agentes se miden, se corrigen y dejan registro de cada cambio.</h1>
+    <p class="lead">Esta es la prueba que conversamos en la reunión: cómo la auditoría de conversaciones detectó dónde se atascaban los leads, cómo eso cambió las preguntas del agente de WhatsApp, cómo el plan de ángulos mejoró la calidad de los leads de subsidio — y cuánto movió cada cosa, con datos reales del piloto.</p>
+    <div class="chips">
+      <span class="chip">Piloto real · corredora Nuevo Norte</span>
+      <span class="chip">15 jun → 30 jul 2026</span>
+      <span class="chip">Cifras en vivo del CRM del embudo</span>
+    </div>
+
+    <div class="tiles">
+      <div class="tile good">
+        <div class="num">US$71 → US$8</div>
+        <div class="lbl">costo de pauta por agenda calificada, antes vs. después de los cambios¹</div>
+      </div>
+      <div class="tile good">
+        <div class="num">53% → 73%</div>
+        <div class="lbl">leads que contestan la primera pregunta, tras corregir el saludo</div>
+      </div>
+      <div class="tile good">
+        <div class="num">×8</div>
+        <div class="lbl">el ritmo de agendamiento (agendas por semana), antes vs. después de los cambios²</div>
+      </div>
+    </div>
+
+    <div class="howto">
+      <strong>Cómo leer estos números</strong>
+      <p class="small" style="margin:6px 0 0">Todas las cifras agregadas salen del CRM del piloto (corte al 30-jul-2026) y de Meta Ads, con ventanas de tiempo declaradas en cada caso. Las conversaciones que se muestran son <em>recreaciones del patrón real</em> — nunca mostramos chats de personas reales ni datos personales (Ley 21.719). Donde un cambio no funcionó, lo decimos.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CASO 1: CLARA ============ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">Caso 1 · auditoría de conversaciones</div>
+    <h2>Clara lee todas las conversaciones y marca dónde se atascan</h2>
+    <div class="agent">
+      <img class="avatar" alt="Clara" src="data:image/jpeg;base64,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">
+      <div>
+        <div class="name">Clara — auditora de conversaciones</div>
+        <div class="role">Parte de la operación de domo IA: no se contrata por separado, se reciben sus resultados.</div>
+      </div>
+    </div>
+    <p>Cada conversación de Antonia queda registrada con el <strong>paso exacto</strong> en que se detuvo: saludo, pregunta de renta, elección de horario, correo. Clara audita ese registro y entrega hallazgos con número, no impresiones.</p>
+
+    <div class="card">
+      <h3>La auditoría del 17 de julio (337 leads acumulados)</h3>
+      <div class="funnel">
+        <div class="frow"><div class="flabel">Escribieron</div><div class="ftrack"><div class="fbar" style="width:100%"></div></div><div class="fval">337</div></div>
+        <div class="leak"><span class="arrow">▼ fuga detectada:</span><span class="small">159 nunca contestaron la primera pregunta — 114 se quedaron en el saludo</span></div>
+        <div class="frow"><div class="flabel">Declararon renta</div><div class="ftrack"><div class="fbar" style="width:53%"></div></div><div class="fval">178 · 53%</div></div>
+        <div class="leak"><span class="arrow">▼ fuga detectada:</span><span class="small">89% de los que declaran renta son tramo bajo → el problema no es el bot, es el anuncio (hallazgo derivado a Matías, ver Caso 2)</span></div>
+        <div class="frow"><div class="flabel">Calificaron</div><div class="ftrack"><div class="fbar" style="width:6.8%"></div></div><div class="fval">23</div></div>
+        <div class="frow"><div class="flabel">Eligieron horario</div><div class="ftrack"><div class="fbar" style="width:3.9%"></div></div><div class="fval">13</div></div>
+        <div class="frow"><div class="flabel">Agendaron</div><div class="ftrack"><div class="fbar" style="width:1.5%"></div></div><div class="fval">5 · 1,5%</div></div>
+      </div>
+      <p class="small muted" style="margin:0">Lo sano también se mide: la conversión de lead calificado a cita era ~22% — el cuello no estaba al final del embudo, estaba en el primer mensaje y en la calidad del tráfico.</p>
+    </div>
+
+    <h3 style="margin-top:28px">El atasco visto de cerca — y el cambio que salió de la auditoría</h3>
+    <div class="chats">
+      <div class="chat bad">
+        <span class="tag">ANTES · 17 jul</span>
+        <h4>Saludo largo + pregunta de nombre</h4>
+        <span class="recreado">recreación del patrón real — sin datos personales</span>
+        <div class="bub bot">¡Hola! 👋 Soy Antonia, asistente de inversión inmobiliaria. Estoy aquí para ayudarte a encontrar tu próxima propiedad. Para poder asesorarte bien te haré un par de preguntas. Primero, ¿cuál es tu nombre?</div>
+        <div class="bub lead">?</div>
+        <div class="sys">— el lead no vuelve a responder —</div>
+        <p class="small muted" style="margin:8px 0 0">114 conversaciones quedaron detenidas exactamente aquí: mucho texto, cero valor inmediato, y una pregunta que no filtra nada.</p>
+      </div>
+      <div class="chat good">
+        <span class="tag">DESPUÉS · desde el 17 jul</span>
+        <h4>Directo a la pregunta que califica, con botones</h4>
+        <span class="recreado">recreación del patrón real — sin datos personales</span>
+        <div class="bub bot">¡Hola! 👋 Soy Antonia, del equipo de Nuevo Norte. Para mostrarte opciones reales, una consulta rápida: ¿en qué rango está tu ingreso mensual?
+          <div class="btns"><span class="btn">Menos de $1,5M</span><span class="btn">$1,6M – $2,5M</span><span class="btn">$2,5M o más</span></div>
+        </div>
+        <div class="bub lead">$1,6M – $2,5M</div>
+        <div class="bub bot">¡Perfecto! Con ese rango hay proyectos que te pueden servir…</div>
+        <p class="small muted" style="margin:8px 0 0">El nombre se pregunta después, recién cuando hace falta para agendar. Un toque de botón reemplazó la barrera de entrada.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:24px">El registro de cambios — qué se esperaba y qué pasó de verdad</h3>
+    <div class="card" style="padding:10px 24px">
+      <div class="tablewrap">
+      <table>
+        <tr><th>Fecha</th><th>Cambio publicado</th><th>Qué se esperaba</th><th>Qué pasó</th></tr>
+        <tr>
+          <td class="mono">17 jul</td>
+          <td>Primer mensaje corto, termina en la pregunta de renta con botones; ya no se pide el nombre al inicio</td>
+          <td>Que más leads contesten la primera pregunta</td>
+          <td><span class="ok">✔ 53% → 73%</span> en los leads llegados después del cambio</td>
+        </tr>
+        <tr>
+          <td class="mono">18 jul</td>
+          <td>El link de la reunión se envía por WhatsApp; el correo deja de ser peaje</td>
+          <td>Menos fuga al momento de agendar</td>
+          <td><span class="ok">✔</span> Primera agenda con el link por WhatsApp el mismo día</td>
+        </tr>
+        <tr>
+          <td class="mono">21 jul</td>
+          <td>Botones de horario "Hoy / Mañana 10:00 / Mañana 16:00"</td>
+          <td>Subir la conversión de horario elegido a cita</td>
+          <td><span class="flat">◦ Plano (38% → 40%)</span> — se registró, y se atacó la fuga por otra palanca</td>
+        </tr>
+        <tr>
+          <td class="mono">23 jul</td>
+          <td>Nuevo ángulo de anuncio para subsidio (Caso 2) + filtro de subsidio/DICOM en la conversación</td>
+          <td>Leads de subsidio que sí califiquen</td>
+          <td><span class="ok">✔ 13 agendas</span> en 7 días con un solo anuncio</td>
+        </tr>
+      </table>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Por qué mostramos también lo que no funcionó:</strong> un experimento fallido y declarado es la prueba de que la medición es real. Los botones de horario no movieron la aguja — quedó registrado, y la siguiente palanca (rescate de la fuga al agendar) ya está en curso.
+    </div>
+
+    <h3 style="margin-top:24px">Resultado en el paso que se tocó</h3>
+    <div class="card">
+      <div class="ba">
+        <div class="barow"><div class="l">Leads hasta el 17 jul</div><div class="batrack"><div class="babar" style="width:66%"></div></div><div class="v">52,8%</div></div>
+        <div class="barow"><div class="l">Leads después del cambio</div><div class="batrack"><div class="babar" style="width:91%"></div></div><div class="v">72,8%</div></div>
+      </div>
+      <p class="small muted" style="margin:0">% de leads que contestan la primera pregunta. Cohortes: 178 de 337 (antes) vs. 134 de 184 (llegados entre el 17 y el 30 jul). <strong>+20 puntos en el paso exacto que la auditoría señaló.</strong></p>
+    </div>
+
+    <p style="margin-top:20px" class="small muted"><strong>Y Clara sigue vigilando hoy:</strong> 141 conversaciones detenidas en la bienvenida esperan un mensaje de rescate (próxima palanca en evaluación), los calificados sin cita se reportan con horas de atasco, y la cobertura del cierre de reuniones se mide para que ninguna métrica se lea sobre datos incompletos.</p>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- ============ CICLO ============ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">El método detrás</div>
+    <h2>Así opera el ciclo, todas las semanas</h2>
+    <p class="lead" style="font-size:16px">No es una consultoría que audita una vez: es la forma normal de operar del equipo.</p>
+    <div class="cycle">
+      <div class="step"><div class="n">PASO 1</div><h4>Antonia conversa</h4><p>Responde en segundos, 24/7. Cada conversación queda registrada con su paso de avance.</p></div>
+      <div class="step"><div class="n">PASO 2</div><h4>Clara audita</h4><p>Encuentra el atasco y lo entrega con número: qué paso, cuántos leads, desde cuándo.</p></div>
+      <div class="step"><div class="n">PASO 3</div><h4>Se publica el cambio</h4><p>Con fecha, hipótesis y registro. Nada cambia sin que quede escrito qué se esperaba.</p></div>
+      <div class="step"><div class="n">PASO 4</div><h4>Se mide el efecto</h4><p>En el paso tocado, no en el total. Si no funcionó, se declara y se prueba otra palanca.</p></div>
+    </div>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- ============ CASO 2: MATÍAS ============ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">Caso 2 · plan de ángulos y formatos</div>
+    <h2>Matías descubrió que la calidad de leads no era culpa del bot — era el anuncio</h2>
+    <div class="agent">
+      <img class="avatar" alt="Matías" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAWaADAAQAAAABAAAAeAAAAAD/4QqPaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLwA8P3hwYWNrZXQgYmVnaW49Iu+7vyIgaWQ9Ilc1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCI/PiA8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJYTVAgQ29yZSA2LjAuMCI+IDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+IDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIgeG1sbnM6SXB0YzR4bXBFeHQ9Imh0dHA6Ly9pcHRjLm9yZy9zdGQvSXB0YzR4bXBFeHQvMjAwOC0wMi0yOS8iIHBob3Rvc2hvcDpDcmVkaXQ9Ik1hZGUgd2l0aCBHb29nbGUgQUkiIElwdGM0eG1wRXh0OkRpZ2l0YWxTb3VyY2VUeXBlPSJodHRwOi8vY3YuaXB0Yy5vcmcvbmV3c2NvZGVzL2RpZ2l0YWxzb3VyY2V0eXBlL3RyYWluZWRBbGdvcml0aG1pY01lZGlhIiBJcHRjNHhtcEV4dDpEaWdpdGFsU291cmNlRmlsZVR5cGU9Imh0dHA6Ly9jdi5pcHRjLm9yZy9uZXdzY29kZXMvZGlnaXRhbHNvdXJjZXR5cGUvdHJhaW5lZEFsZ29yaXRobWljTWVkaWEiLz4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg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">
+      <div>
+        <div class="name">Matías — media buyer</div>
+        <div class="role">Vigila la cuenta de Meta Ads todos los días y propone qué se testea cada semana.</div>
+      </div>
+    </div>
+    <p>El hallazgo de Clara — <strong>89% de los leads declaraban renta de tramo bajo</strong> — cruzó al territorio de Matías: el ángulo "invierte sin pie" atraía masivamente a un perfil que no calificaba para inversión. La respuesta no fue descartar ese tráfico, sino <strong>diseñar un ángulo para él</strong>: personas con subsidio habitacional adjudicado.</p>
+
+    <div class="card">
+      <h3>El plan de testeo: una variable por ciclo, dos niveles de métrica</h3>
+      <p class="small">Cada semana se testea <strong>una sola variable</strong> (formato → ángulo → hook), con las demás fijas. Y ningún anuncio se escala por ser barato en conversaciones — solo por costo por <em>calificado</em> y por <em>agenda</em>:</p>
+      <div class="tablewrap">
+      <table>
+        <tr><th></th><th>Métrica</th><th>Para qué sirve</th><th>Ejemplo real del set</th></tr>
+        <tr>
+          <td class="mono">Nivel 1</td>
+          <td>Costo por conversación</td>
+          <td>Solo para <strong>pausar</strong> lo que no rinde</td>
+          <td class="small">Uno de los anuncios más baratos del set (~US$2,1/conversación) lleva <strong>0 agendas en 17 conversaciones</strong> → no se escala</td>
+        </tr>
+        <tr>
+          <td class="mono">Nivel 2</td>
+          <td>Costo por calificado y por agenda</td>
+          <td>Lo único que autoriza <strong>escalar</strong> (+20% por escalón, a ganadores)</td>
+          <td class="small">El anuncio de subsidio agendó al 54% de los que eligieron horario → se escala</td>
+        </tr>
+      </table>
+      </div>
+      <p class="small muted" style="margin:0">Una agencia que optimiza por costo por lead compraría el anuncio equivocado. Este criterio solo es posible porque la conversación y la pauta se miran juntas.</p>
+    </div>
+
+    <h3 style="margin-top:28px">El resultado: mismo público, distinto ángulo</h3>
+    <div class="adcmp">
+      <div class="adcard">
+        <div class="adtag">Ángulo original · junio</div>
+        <h4>"Invierte sin tener el pie hoy"</h4>
+        <dl>
+          <dt>Inversión</dt><dd>US$195</dd>
+          <dt>Conversaciones</dt><dd>272</dd>
+          <dt>Agendas</dt><dd>5 (1,8%)</dd>
+        </dl>
+        <div class="big">US$39 <span style="font-size:14px;font-weight:400;color:var(--muted)">por agenda</span></div>
+      </div>
+      <div class="adcard win">
+        <div class="adtag">Ángulo nuevo · desde el 23 jul</div>
+        <h4>"Tu subsidio no tiene por qué vencerse"</h4>
+        <dl>
+          <dt>Inversión</dt><dd>US$33</dd>
+          <dt>Conversaciones</dt><dd>82</dd>
+          <dt>Agendas</dt><dd>13 (15,9%)</dd>
+        </dl>
+        <div class="big">US$2,6 <span style="font-size:14px;font-weight:400;color:var(--muted)">por agenda</span></div>
+      </div>
+    </div>
+    <p class="small muted">Embudo del anuncio nuevo: 82 escriben → 61 declaran renta (74%) → 24 eligen horario → 13 agendan. En paralelo, Antonia sumó un <strong>filtro de subsidio y DICOM</strong> en la conversación: el lead con subsidio adjudicado y sin DICOM califica y pasa; el resto se descarta con respeto y queda registrado. Es exactamente la mecánica que un proyecto DS19 necesita.</p>
+
+    <div class="callout green">
+      <strong>Nota de honestidad que un ojo experto va a apreciar:</strong> el anuncio nuevo corre sobre la Antonia ya corregida — las dos mejoras se componen y por eso no reclamamos un multiplicador único ni doble crédito. Lo que sí es atribuible por separado: la corrección del saludo movió su paso +20 puntos, y el cambio de ángulo llevó el costo por agenda de US$39 a US$2,6 en el mismo público. El efecto conjunto en el piloto: <strong>5 agendas en las primeras 4½ semanas → 16 en los últimos 13 días</strong>, con el costo de pauta por agenda cayendo de ~US$71 a ~US$8.¹
+    </div>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- ============ POCURO ============ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">¿Y en Pocuro?</div>
+    <h2>Lo que este método significa para sus proyectos</h2>
+
+    <div class="card" style="margin-bottom:16px">
+      <h3>1 · Hoy nadie puede optimizar por costo por agenda — no por falta de capacidad, sino de conexión</h3>
+      <p class="small" style="margin:0">Su agencia optimiza la pauta con las señales que Meta le devuelve; lo que pasa <em>después</em> del clic — la conversación, el atasco, la agenda, el CRM — no vuelve a ella. Y el chatbot responde, pero nadie audita dónde quedan detenidas sus conversaciones ni publica el cambio que lo corrige. domo IA es la capa que junta esas dos mitades: <strong>con nuestros datos, su agencia también optimiza mejor</strong>.</p>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h3>2 · En DS19, el 88% del tráfico ES tramo bajo — el valor está en separar bien, no en filtrar por filtrar</h3>
+      <p class="small" style="margin:0">En el piloto, 275 de 312 leads que declararon renta eran tramo bajo. Para un proyecto DS19 eso no es tráfico malo: es el público. El punto es distinguir <strong>en la conversación, en segundos</strong>, quién tiene subsidio adjudicado y sin DICOM — antes de que ocupe el tiempo de la sala de ventas. Esa calificación ya está construida y operando.</p>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h3>3 · La mitad de los leads llega cuando no hay nadie conectado</h3>
+      <p class="small" style="margin:0">En el piloto, el 54% de los leads escribió fuera del horario hábil. Antonia contesta en segundos a cualquier hora — y el lead que recibe respuesta inmediata es el que después aparece en la tabla de agendas, no en la de "no contestó".</p>
+    </div>
+
+    <div class="card">
+      <h3>4 · ¿Cuánto sería en sus números?</h3>
+      <p class="small">En el piloto, la tasa de agendamiento de las conversaciones nuevas fue ~8,7% (16 de 184) vs. 1,5% inicial. No prometemos trasladar estos costos ni estas tasas — otro producto, otras regiones, otro presupuesto. <strong>Lo que se transfiere es el método de medición y mejora.</strong> Para dimensionar el piloto con cifras de ustedes y no de terceros, la variable que falta es una sola: <span class="mono">¿cuántos leads al mes recibe el proyecto candidato?</span></p>
+      <p class="small muted" style="margin:0">Referencia ilustrativa: con 300 leads/mes, la diferencia entre 1,5% y 8,7% son ~22 reuniones calificadas más al mes. Con el dato real de ustedes, esta fila se calcula en serio.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VIDEO ============ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">El equipo completo</div>
+    <h2>Así trabaja domo IA — en 2 minutos</h2>
+    <p class="lead" style="font-size:16px">Antonia, Clara y Matías son parte de un equipo de trabajadores digitales especializados. Este video muestra el método completo.</p>
+    <video controls preload="metadata" style="width:100%;border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow);margin-top:8px;background:#1C2340">
+      <source src="https://domo-ia.com/media/video-metodo-domo.mp4" type="video/mp4">
+    </video>
+    <p class="small muted" style="margin-top:8px">Si está leyendo esto en PDF: el video está en <a href="https://domo-ia.com" style="color:var(--brand)">domo-ia.com</a>.</p>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section>
+  <div class="wrap">
+    <div class="cta">
+      <h2>Armemos la demo con datos de ustedes</h2>
+      <p>Para diseñar el piloto en uno de sus proyectos, necesitamos cuatro definiciones de su lado:</p>
+      <ol>
+        <li><strong>Volumen:</strong> leads/mes del proyecto candidato (para dimensionar la operación).</li>
+        <li><strong>TI:</strong> un contacto técnico para evaluar la integración con Microsoft Dynamics.</li>
+        <li><strong>Canal:</strong> cómo conviven el número de WhatsApp del proyecto y la herramienta actual durante el piloto.</li>
+        <li><strong>Agencia:</strong> una reunión conjunta — este método hace mejor su trabajo, no lo reemplaza.</li>
+      </ol>
+      <p>Con eso sobre la mesa, presentamos la demo con sus datos en ~2 semanas.</p>
+      <a class="mail" href="mailto:rodrigo@domo-ia.com">rodrigo@domo-ia.com</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOT ============ -->
+<section class="foot">
+  <div class="wrap">
+    <div class="card">
+      <p style="margin-bottom:8px"><strong>Nota de metodología.</strong> ¹ Costo por agenda = gasto de pauta de Meta del período ÷ agendas generadas vía WhatsApp en el mismo período (antes del 17-jul: ~US$356 y 5 agendas; después: ~US$134 y 16 agendas; corte 30-jul-2026). Las cifras de embudo provienen del CRM del piloto Nuevo Norte, con cortes al 17-jul y 30-jul-2026. ² Ritmo de agendamiento = agendas por semana en cada ventana: 5 agendas en las 4½ semanas previas al 17-jul (~1,1/semana) vs. 16 agendas en los 13 días siguientes (~8,6/semana). Las conversaciones mostradas son recreaciones fieles del patrón detectado en la auditoría; no se exhiben chats reales ni datos personales de ningún lead, en línea con la Ley 21.719 — el mismo estándar de tratamiento de datos que aplicaríamos a los leads de Pocuro.</p>
+      <p style="margin:0">domo IA · trabajadores digitales especializados para inmobiliarias · <a href="https://domo-ia.com" style="color:var(--brand)">domo-ia.com</a></p>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
